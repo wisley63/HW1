@@ -24,7 +24,6 @@ interface IERC721TokenReceiver {
 }
 
 contract NFinTech is IERC721 {
-    // Note: I have declared all variables you need to complete this challenge
     string private _name;
     string private _symbol;
 
@@ -34,9 +33,10 @@ contract NFinTech is IERC721 {
     mapping(address => uint256) private _balances;
     mapping(uint256 => address) private _tokenApproval;
     mapping(address => bool) private isClaim;
-    mapping(address => mapping(address => bool)) _operatorApproval;
+    mapping(address => mapping(address => bool)) private _operatorApproval;
 
     error ZeroAddress();
+    error NotApprovedForTransfer();
 
     constructor(string memory name_, string memory symbol_) payable {
         _name = name_;
@@ -74,31 +74,86 @@ contract NFinTech is IERC721 {
         return owner;
     }
 
+
     function setApprovalForAll(address operator, bool approved) external {
-        // TODO: please add your implementaiton here
+        require(operator != address(0), "ERC721: setting approve to the zero address");
+        require(msg.sender != operator, "ERC721: setting approval status for self");
+
+        _operatorApproval[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
     }
 
     function isApprovedForAll(address owner, address operator) public view returns (bool) {
-        // TODO: please add your implementaiton here
+         return _operatorApproval[owner][operator];
     }
 
     function approve(address to, uint256 tokenId) external {
-        // TODO: please add your implementaiton here
+        address owner = _owner[tokenId];
+        require(owner == msg.sender || isApprovedForAll(owner, msg.sender), "ERC721: approve caller is not owner nor approved for all");
+        require(owner != address(0), "ERC721: approval to non-existent token");
+
+        _tokenApproval[tokenId] = to;
+        emit Approval(owner, to, tokenId);
     }
 
     function getApproved(uint256 tokenId) public view returns (address operator) {
-        // TODO: please add your implementaiton here
+        require(_owner[tokenId] != address(0), "ERC721: approved query for nonexistent token");
+        return _tokenApproval[tokenId];
     }
 
-    function transferFrom(address from, address to, uint256 tokenId) public {
-        // TODO: please add your implementaiton here
+    function transferFrom(address from, address to, uint256 tokenId) public override {
+        address owner = ownerOf(tokenId);
+        require(from == owner, "ERC721: transfer of token that is not own");
+        require(to != address(0), "ERC721: transfer to the zero address");
+
+        address approved = getApproved(tokenId);
+        require(msg.sender == owner || msg.sender == approved || isApprovedForAll(owner, msg.sender),
+            "ERC721: transfer caller is not owner nor approved");
+
+        _tokenApproval[tokenId] = address(0);
+        _balances[from] -= 1;
+        _balances[to] += 1;
+        _owner[tokenId] = to;
+
+        emit Transfer(from, to, tokenId);
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public {
-        // TODO: please add your implementaiton here
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public override {
+        _safeTransferFrom(from, to, tokenId, data);
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId) public {
-        // TODO: please add your implementaiton here
+    function safeTransferFrom(address from, address to, uint256 tokenId) public override {
+        _safeTransferFrom(from, to, tokenId, bytes(""));
+    }
+
+    function _safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) internal {
+        transferFrom(from, to, tokenId);
+        require(_checkOnERC721Received(from, to, tokenId, data), "ERC721: transfer to non ERC721Receiver implementer");
+    }
+
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) private returns (bool) {
+         if (isContract(to)) {
+            try IERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval) {
+                return retval == IERC721TokenReceiver.onERC721Received.selector;
+            } catch (bytes memory reason) {
+                if (reason.length == 0) {
+                    revert("ERC721: transfer to non ERC721Receiver implementer");
+                } else {
+                    assembly {
+                        revert(add(32, reason), mload(reason))
+                    }
+                }
+            }
+        } else {
+            return true;
+        }
+    }
+
+    function isContract(address addr) private view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return size > 0;
     }
 }

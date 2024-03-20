@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 interface ID31eg4t3 {
@@ -8,18 +7,17 @@ interface ID31eg4t3 {
 
 contract Attack {
     address internal immutable victim;
-    // TODO: Declare some variable here
-    // Note: Checkout the storage layout in victim contract
+    bytes private maliciousCode;
 
     constructor(address addr) payable {
         victim = addr;
+        // Initialize maliciousCode with bytecode to exploit the vulnerability
+        // Example: maliciousCode = hex"";
     }
 
-    // NOTE: You might need some malicious function here
-
     function exploit() external {
-        // TODO: Add your implementation here
-        // Note: Make sure you know how delegatecall works
-        // bytes memory data = ...
+        // Execute malicious delegate call
+        (bool success, ) = victim.delegatecall(maliciousCode);
+        require(success, "Exploit failed");
     }
 }
