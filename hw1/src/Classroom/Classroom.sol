@@ -1,43 +1,29 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/* Problem 1 Contract */
-contract ClassroomV1 {
-    uint256 public code = 1000;
-    bool public isEnrolled;
+/* Problem 1 Interface & Contract */
+contract StudentV1 {
+    // Note: You can declare some state variable
 
-    function enroll(address student) public {
-        uint256 studentCode = StudentV1(student).register();
-        if (studentCode >= code && !isEnrolled) {
-            isEnrolled = true;
-            code = studentCode;
-        }
+    function register() external returns (uint256) {
+        // TODO: please add your implementaiton here
     }
 }
 
-/* Problem 2 Contract */
-contract ClassroomV2 {
-    uint256 public code = 1000;
-    bool public isEnrolled;
+/* Problem 2 Interface & Contract */
+interface IClassroomV2 {
+    function isEnrolled() external view returns (bool);
+}
 
-    function enroll(address student) public {
-        uint256 studentCode = StudentV2(student).register();
-        if (studentCode >= code && !isEnrolled) {
-            isEnrolled = true;
-            code = studentCode;
-        }
+contract StudentV2 {
+    function register() external view returns (uint256) {
+        // TODO: please add your implementaiton here
     }
 }
 
-/* Problem 3 Contract */
-contract ClassroomV3 {
-    uint256 public code = 1000;
-    bool public isEnrolled;
-
-    function enroll(address student) public {
-        uint256 studentCode = StudentV3(student).register();
-        if (studentCode >= code) {
-            isEnrolled = true;
-            code = studentCode;
-        }
+/* Problem 3 Interface & Contract */
+contract StudentV3 {
+    function register() external view returns (uint256) {
+        // TODO: please add your implementaiton here
     }
 }
