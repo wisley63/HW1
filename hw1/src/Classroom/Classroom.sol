@@ -1,3 +1,5 @@
+pragma solidity ^0.8.0;
+
 /* Problem 1 Contract */
 contract ClassroomV1 {
     uint256 public code = 1000;
